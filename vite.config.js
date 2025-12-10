@@ -1,46 +1,55 @@
-import { defineConfig } from 'vite';
+import { defineConfig } from "vite";
 import { ViteEjsPlugin } from "vite-plugin-ejs";
-import sassGlobImports from 'vite-plugin-sass-glob-import';
-import { globSync } from 'glob';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import sassGlobImports from "vite-plugin-sass-glob-import";
+import { globSync } from "glob";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 const jsFiles = Object.fromEntries(
-  globSync('src/**/*.js', { ignore: ['node_modules/**','**/modules/**','**/dist/**']}).map(file => [
+  globSync("src/**/*.js", {
+    ignore: ["node_modules/**", "**/modules/**", "**/dist/**"],
+  }).map((file) => [
     path.relative(
-      'src',
+      "src",
       file.slice(0, file.length - path.extname(file).length)
     ),
-    fileURLToPath(new URL(file, import.meta.url))
+    fileURLToPath(new URL(file, import.meta.url)),
   ])
 );
 
 const scssFiles = Object.fromEntries(
-  globSync('src/assets/scss/**/*.scss', { ignore: ['src/assets/scss/**/_*.scss'] }).map(file => [
+  globSync("src/assets/scss/**/*.scss", {
+    ignore: ["src/assets/scss/**/_*.scss"],
+  }).map((file) => [
     path.relative(
-      'src',
+      "src",
       file.slice(0, file.length - path.extname(file).length)
     ),
-    fileURLToPath(new URL(file, import.meta.url))
+    fileURLToPath(new URL(file, import.meta.url)),
   ])
 );
 
 const htmlFiles = Object.fromEntries(
-  globSync('src/**/*.html', { ignore: ['node_modules/**', '**/dist/**'] }).map(file => [
-    path.relative(
-      'src',
-      file.slice(0, file.length - path.extname(file).length)
-    ),
-    fileURLToPath(new URL(file, import.meta.url))
-  ])
+  globSync("src/**/*.html", { ignore: ["node_modules/**", "**/dist/**"] }).map(
+    (file) => [
+      path.relative(
+        "src",
+        file.slice(0, file.length - path.extname(file).length)
+      ),
+      fileURLToPath(new URL(file, import.meta.url)),
+    ]
+  )
 );
 
 const inputObject = { ...scssFiles, ...jsFiles, ...htmlFiles };
 
 export default defineConfig({
-  root: './src',
+  root: "./src",
   build: {
-    outDir: '../dist',
+    outDir: "../dist",
+    minify: "esbuild", // JS/CSSをminify（デフォルト値）
+    cssMinify: true, // CSSをminify（デフォルト値）
+    jsMinify: true, // JSをminify（デフォルト値）
     rollupOptions: {
       input: inputObject,
       output: {
@@ -48,21 +57,18 @@ export default defineConfig({
         chunkFileNames: `assets/[name].js`,
         assetFileNames: (assetInfo) => {
           if (/\.( gif|jpeg|jpg|png|svg|webp| )$/.test(assetInfo.name)) {
-            return 'assets/[name].[ext]';
+            return "assets/[name].[ext]";
           }
           if (/\.css$/.test(assetInfo.name)) {
-            return 'assets/scss/[name].[ext]';
+            return "[name].[ext]";
           }
-          return 'assets/[name].[ext]';
+          return "assets/[name].[ext]";
         },
       },
     },
   },
-  plugins: [
-    ViteEjsPlugin(),
-    sassGlobImports()
-  ],
+  plugins: [ViteEjsPlugin(), sassGlobImports()],
   server: {
-    port: 3000
-  }
+    port: 3000,
+  },
 });
